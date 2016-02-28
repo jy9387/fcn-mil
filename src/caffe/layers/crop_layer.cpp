@@ -59,11 +59,11 @@ void CropLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       
       std::cout<<this->net_->layer_names()[down_map[blob]]<<": "<<std::endl;
       for (int j = 0; j < 4; ++j) {
-        std::cout<<layer->coord_map().val()[j];
+        std::cout<<layer->coord_map().val()[j]<<", ";
       }
       std::cout<<std::endl;
       for (int j = 0; j < 4; ++j) {
-        std::cout<<coord_maps[i].val()[j];
+        std::cout<<coord_maps[i].val()[j]<<", ";
       }
       std::cout<<std::endl<<"<------------------>"<<std::endl;
     }

@@ -31,7 +31,14 @@ class DiagonalAffineMap {
     return out;
   }
   inline vector<pair<Dtype, Dtype> > coefs() { return coefs_; }
-
+  inline vector<Dtype> val() {
+    vector<Dtype> ret;
+    for (int i = 0; i < coefs_.size(); ++i) {
+      ret.push_back(coefs_[i].first);
+      ret.push_back(coefs_[i].second);
+    }
+    return ret;
+  };
  private:
   DiagonalAffineMap() { }
   static inline pair<Dtype, Dtype> compose_coefs(pair<Dtype, Dtype> left,

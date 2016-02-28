@@ -56,7 +56,19 @@ void CropLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
          blob = this->net_->bottom_vecs()[down_map[blob]][0]) {
       shared_ptr<Layer<Dtype> > layer = this->net_->layers()[down_map[blob]];
       coord_maps[i] = coord_maps[i].compose(layer->coord_map());
+      
+      std::cout<<this->net_->layer_names()[down_map[blob]]<<": "<<std::endl;
+      for (int j = 0; j < 4; ++j) {
+        std::cout<<layer->coord_map().val()[j];
+      }
+      std::cout<<std::endl;
+      for (int j = 0; j < 4; ++j) {
+        std::cout<<coord_maps[i].val()[j];
+      }
+      std::cout<<std::endl<<"<------------------>"<<std::endl;
     }
+    std::cout<<std::endl<<"<------------------>"<<std::endl;
+    std::cout<<std::endl<<"<------------------>"<<std::endl;
   }
   // Compute the mapping from first bottom coordinates to second.
   DiagonalAffineMap<Dtype> crop_map =

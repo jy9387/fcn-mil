@@ -657,6 +657,36 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   vector<Blob<Dtype>*> sigmoid_top_vec_;
 };
 
+template <typename Dtype>
+class MilLossLayer : public LossLayer<Dtype> {
+ public:
+  explicit MilLossLayer(const LayerParameter& param)
+      : LossLayer<Dtype>(param),
+          sigmoid_layer_(new SigmoidLayer<Dtype>(param)),
+          sigmoid_output_0(new Blob<Dtype>()),
+          sigmoid_output_1(new Blob<Dtype>()){}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual inline const char* type() const { return "MilLossLayer"; }
+  virtual inline int ExactNumBottomBlobs() const { return 3; }
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
+  shared_ptr<Blob<Dtype> > sigmoid_output_0;
+  shared_ptr<Blob<Dtype> > sigmoid_output_1;
+  
+  vector<vector<Blob<Dtype>*> > sigmoid_bottom_vec_;
+  vector<vector<Blob<Dtype>*> > sigmoid_top_vec_;
+  int num_instance;
+  vector<Dtype> p_x;
+};
+
 // Forward declare SoftmaxLayer for use in SoftmaxWithLossLayer.
 template <typename Dtype> class SoftmaxLayer;
 

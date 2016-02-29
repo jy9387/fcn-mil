@@ -1,6 +1,8 @@
 ## General
 examples/
 data/
+*.jpg
+*.png
 # Compiled Object files
 *.slo
 *.lo

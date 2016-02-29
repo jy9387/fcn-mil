@@ -17,7 +17,6 @@ void MilLossLayer<Dtype>::LayerSetUp(
   sigmoid_top_vec_.clear();
   // the last bottom is label
   num_instance = bottom.size() - 1;
-  p_x = new Dtype[bottom[0]->count()];
   vector<Blob<Dtype>* > temp;
   for (int i = 0; i < num_instance; ++i) {
     temp.clear();
@@ -47,7 +46,6 @@ void MilLossLayer<Dtype>::Reshape(
 template <typename Dtype>
 void MilLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  LOG(INFO)<<"flag0";
   for (int i = 0; i < num_instance; i++) {
     sigmoid_bottom_vec_[i][0] = bottom[i];
     sigmoid_layer_->Forward(sigmoid_bottom_vec_[i], sigmoid_top_vec_[i]);
@@ -57,7 +55,7 @@ void MilLossLayer<Dtype>::Forward_cpu(
   Dtype temp_loss_pos = Dtype(0);
   int count = bottom[0]->count();
   int count_pos = 0, count_neg = 0;
-
+  if (p_x.size() < count) p_x.resize(count);
   const Dtype* target = bottom[num_instance]->cpu_data();
   for (int i = 0; i < count; i++)
     if (target[i])count_pos++;else count_neg++;
@@ -74,14 +72,12 @@ void MilLossLayer<Dtype>::Forward_cpu(
   }
   loss = temp_loss_neg * count_pos / count + temp_loss_pos * count_neg / count;
   top[0]->mutable_cpu_data()[0] = loss;
-  LOG(INFO)<<"loss: "<<loss;
 }
 
 template <typename Dtype>
 void MilLossLayer<Dtype>::Backward_cpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  LOG(INFO)<<"INTO BACKWARD";
   if (propagate_down[num_instance]) {
     LOG(FATAL) << this->type()
                << " Layer cannot backpropagate to label inputs.";
@@ -94,8 +90,8 @@ void MilLossLayer<Dtype>::Backward_cpu(
     for (int i = 0; i < count; i++)
       if (target[i])count_pos++;else count_neg++;
 
-    const int num = bottom[0]->num();
-    vector<Dtype*> bottom_diff; bottom_diff.clear();// = bottom[0]->mutable_cpu_diff();
+    //const int num = bottom[0]->num();
+    vector<Dtype*> bottom_diff; bottom_diff.clear();
     vector<const Dtype*> p_x_ij; p_x_ij.clear();
     for (int j = 0; j < num_instance; ++j) {
       p_x_ij.push_back(sigmoid_top_vec_[j][0]->cpu_data());
@@ -111,9 +107,6 @@ void MilLossLayer<Dtype>::Backward_cpu(
         }
       }
     }
-    const Dtype loss_weight = top[0]->cpu_diff()[0];
-    //caffe_scal(count, loss_weight / num, bottom_diff);
-    LOG(INFO)<<"OUT BACKWARD";
   }
 }
 

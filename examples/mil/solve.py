@@ -34,7 +34,7 @@ def interp_surgery(net, layers):
 # base net -- follow the editing model parameters example to make
 # a fully convolutional VGG16 net.
 # http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/net_surgery.ipynb
-base_weights = caffe_root+'models/5stage-vgg.caffemodel'
+base_weights = caffe_root+'../models/5stage-vgg.caffemodel'
 
 # init
 caffe.set_mode_gpu()
@@ -44,16 +44,14 @@ solver = caffe.SGDSolver('examples/mil/solver.prototxt')
 
 # do net surgery to set the deconvolution weights for bilinear interpolation
 interp_layers = [k for k in solver.net.params.keys() if 'up' in k]
-interp_surgery(solver.net, interp_layers)
+interp_surgery(solver.net, interp_layers)     
+# copy base weights for fine-tuning
+#solver.restore('dsn-full-res-3-scales_iter_29000.solverstate')
+solver.net.copy_from(base_weights)
 for l in solver.net.params.keys():
     if l[-1] == '_':
         print 'copy layer parameter from ' + l[0:-1] + ' to ' +  l
         solver.net.params[l][0].data[:,:,:,:] = solver.net.params[l[0:-1]][0].data[:,:,:,:]
-        
-# copy base weights for fine-tuning
-#solver.restore('dsn-full-res-3-scales_iter_29000.solverstate')
-solver.net.copy_from(base_weights)
-
 # solve straight through -- a better approach is to define a solving loop to
 # 1. take SGD steps
 # 2. score the model by the test net `solver.test_nets[0]`

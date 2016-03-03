@@ -27,6 +27,8 @@ void MilLossLayer<Dtype>::LayerSetUp(
       temp.push_back(sigmoid_output_0.get());
     } else if (i == 1){
       temp.push_back(sigmoid_output_1.get());
+    } else if (i == 2) {
+      temp.push_back(sigmoid_output_2.get());
     }
     sigmoid_top_vec_.push_back(temp);
   }
@@ -72,13 +74,15 @@ void MilLossLayer<Dtype>::Forward_cpu(
       LOG(INFO)<<"bottom[0] cpu_data:"<<bottom[0]->cpu_data()[i]<<",bottom[1] cpu_data:"<<bottom[1]->cpu_data()[i];
       LOG(FATAL)<<"error";
     }
-    temp_loss = bool(target[i]) * log(p_x[i] + ( 1 - bool(target[i]) ) * (1 - p_x[i]) );
-    if (bool(target[i]))
+    temp_loss = log(target[i] * p_x[i] + ( 1 - target[i]) * (1 - p_x[i]) );
+    if (target[i] == 1)
       temp_loss_pos -= temp_loss;
-    else
+    else if (target[i] == 0)
       temp_loss_neg -= temp_loss;
+    else 
+      LOG(FATAL)<<"invalid label";
   }
-  loss = temp_loss_neg * count_pos / count + temp_loss_pos * count_neg / count;
+  loss = temp_loss_neg * (count_pos / count) + temp_loss_pos * (count_neg / count);
   top[0]->mutable_cpu_data()[0] = loss;
 }
 
@@ -108,10 +112,12 @@ void MilLossLayer<Dtype>::Backward_cpu(
     Dtype neg_frac = count_pos / (count_neg + count_pos);
     for (int i = 0; i < count; ++i) {
       for (int j = 0; j < num_instance; ++j) {
-        if (bool(target[i]))
-          bottom_diff[j][i] = pos_frac * (p_x_ij[j][i] - bool(target[i]) * p_x_ij[j][i] / p_x[i]);
-        else
-          bottom_diff[j][i] = neg_frac * (p_x_ij[j][i] - bool(target[i]) * p_x_ij[j][i] / p_x[i]);
+        if (target[i] == 1)
+          bottom_diff[j][i] = pos_frac * (p_x_ij[j][i] - target[i] * p_x_ij[j][i] / p_x[i]);
+        else if (target[i] == 0)
+          bottom_diff[j][i] = neg_frac * (p_x_ij[j][i] - target[i] * p_x_ij[j][i] / p_x[i]);
+        else 
+          LOG(FATAL)<<"invalid label";
         if (isnan(bottom_diff[j][i]))
           LOG(FATAL)<<"bottom_diff nan! p_x_ij:"<<p_x_ij[j][i]<<", p_x:"<<p_x[i];
       }

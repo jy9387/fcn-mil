@@ -1033,6 +1033,7 @@ message V1LayerParameter {
     DECONVOLUTION = 39;
     CROP = 40;
     MIL_LOSS = 41;
+    MIL = 42;
   }
   optional LayerType type = 5;
   repeated BlobProto blobs = 6;

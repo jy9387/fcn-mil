@@ -44,7 +44,6 @@ void MilLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     p_x[i] = 1 - p_x[i];
     top_data[i] = p_x[i];
   }
-  
 }
 
 template <typename Dtype>

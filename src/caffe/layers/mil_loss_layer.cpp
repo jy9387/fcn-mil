@@ -63,9 +63,10 @@ void MilLossLayer<Dtype>::Forward_cpu(
   for (int i = 0; i < count; ++i) {
     p_x[i] = Dtype(1);
     for (int j = 0; j < num_instance; ++j) {
-      p_x[i] *= 1 - sigmoid_top_vec_[j][0]->cpu_data()[i];
+      p_x[i] *= 1 - std::max( sigmoid_top_vec_[j][0]->cpu_data()[i], \
+                              Dtype(FLT_MIN));
     }
-    p_x[i] = 1 - p_x[i];
+    p_x[i] = std::max(1 - p_x[i], Dtype(FLT_MIN));
     if (isnan(p_x[i])) {
       LOG(INFO)<<sigmoid_top_vec_[0][0]->cpu_data()[i]<<", "<<sigmoid_top_vec_[1][0]->cpu_data()[i];
       LOG(INFO)<<"bottom[0] cpu_data:"<<bottom[0]->cpu_data()[i]<<",bottom[1] cpu_data:"<<bottom[1]->cpu_data()[i];
@@ -76,10 +77,6 @@ void MilLossLayer<Dtype>::Forward_cpu(
       temp_loss_pos -= temp_loss;
     else
       temp_loss_neg -= temp_loss;
-    if (temp_loss > 0) {
-      LOG(INFO)<<temp_loss<<"p:"<<p_x[i]<<"log:"<<log(p_x[i])<<"term1:"<<bool(target[i]) * log(p_x[i])<<"term2:"<<( 1 - bool(target[i]) ) * (1 - p_x[i]);
-      LOG(FATAL)<<"ERROR";
-    }
   }
   loss = temp_loss_neg * count_pos / count + temp_loss_pos * count_neg / count;
   top[0]->mutable_cpu_data()[0] = loss;
@@ -115,6 +112,8 @@ void MilLossLayer<Dtype>::Backward_cpu(
           bottom_diff[j][i] = pos_frac * (p_x_ij[j][i] - bool(target[i]) * p_x_ij[j][i] / p_x[i]);
         else
           bottom_diff[j][i] = neg_frac * (p_x_ij[j][i] - bool(target[i]) * p_x_ij[j][i] / p_x[i]);
+        if (isnan(bottom_diff[j][i]))
+          LOG(FATAL)<<"bottom_diff nan! p_x_ij:"<<p_x_ij[j][i]<<", p_x:"<<p_x[i];
       }
     }
     //LOG(INFO)<<"bottom[0] asum_diff: "<<bottom[0]->asum_diff()<<", bottom[1] asum_diff: "<<bottom[1]->asum_diff();

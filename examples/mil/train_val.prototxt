@@ -102,7 +102,8 @@ layer { bottom: 'conv5_3' top: 'conv5_3' name: 'relu5_3' type: "ReLU" }
 
 layer { name: 'score' type: "Convolution" bottom: 'conv5_3' top: 'score'
   param { lr_mult: 0.01 decay_mult: 1 } param { lr_mult: 0.02 decay_mult: 0}
-  convolution_param { engine: CAFFE num_output: 1 kernel_size: 1 } }
+  convolution_param { engine: CAFFE num_output: 1 kernel_size: 1 
+  weight_filler{type: 'gaussian' std: 0.001}}}
 layer { 
   type: "Deconvolution" 
   name: 'upsample' 
@@ -170,7 +171,8 @@ layer { bottom: 'conv4_3_' top: 'conv4_3_' name: 'relu4_3' type: "ReLU" }
 
 layer { name: 'score_' type: "Convolution" bottom: 'conv4_3_' top: 'score_'
   param { lr_mult: 0.01 decay_mult: 1 } param { lr_mult: 0.02 decay_mult: 0}
-  convolution_param { engine: CAFFE num_output: 1 kernel_size: 1 } }
+  convolution_param { engine: CAFFE num_output: 1 kernel_size: 1 
+  weight_filler{type: 'gaussian' std: 0.001}}}
 layer { 
   type: "Deconvolution" 
   name: 'upsample_' 
@@ -184,10 +186,10 @@ layer { type: "Crop" name: 'crop_' bottom: 'score-up_' bottom: 'data' top: 'upsc
 layer { 
   type: "MilLoss" 
   name: "mil_loss"
-  bottom: "upscore_"
   bottom: "upscore"
+  bottom: "upscore_"
   bottom: "label" 
-  top:"loss"  
+  top:"loss" 
   loss_weight: 1 
   loss_param {
     normalize: false
